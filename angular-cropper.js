@@ -6,8 +6,9 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
   return {
     restrict: 'A',
-    controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
-      var canvas = $element[0];
+    template: '<div class="cropper-wrapper"><canvas width="{{config.width}}" height="{{config.height}}"></canvas><input type="range" min="0" max="100" step="1" ng-model="scale.current" ng-change="onZoom()" ng-if="scale.max > 1"/> {{scale.current}}</div>',
+    controller: ['$scope', '$attrs', '$element', function ($scope, $attrs, $element) {
+      var canvas = $element[0].querySelector('canvas');
 
       // If twCropper attribute is provided
       if ($attrs.twCropper) {
@@ -19,18 +20,34 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         return canvas.toDataURL();
       };
     }],
-    link: function(scope, el, attrs) {
-      if (angular.lowercase(el[0].nodeName) !== 'canvas') {
-        return;
-      }
+    link: function (scope, el, attrs) {
 
-      var canvas = el[0];
+      var canvas = el[0].querySelector('canvas');
       var ctx = canvas.getContext('2d');
       var img = new Image();
-      var x, y, scale, maxScale;
+      var x, y, scale;
+
+      scope.config = {
+        width: parseInt(attrs.width || 0) + parseInt(attrs.transparent || 0),
+        height: parseInt(attrs.height || 0) + parseInt(attrs.transparent || 0)
+      };
+
+      scope.scale = {
+        current: 0,
+        max: 0
+      };
 
       var draw = function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, x, y, canvas.width * scale, canvas.height * scale, 0, 0, canvas.width, canvas.height);
+      };
+
+      scope.onZoom = function(){
+        if(scope.scale.max > 1){
+          scale = (scope.scale.max - 1)/100 * scope.scale.current + 1;
+        }
+        zoom(0);
+        draw();
       };
 
       var zoom = function zoom(dScale) {
@@ -40,34 +57,62 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
         if (scale < 1) {
           scale = 1;
-        } else if (scale > maxScale) {
-          scale = maxScale;
+        } else if (scale > scope.scale.max) {
+          scale = scope.scale.max;
         }
 
-        var newWidth = scale * canvas.width;
-        var newHeight = scale * canvas.height;
+        scope.$evalAsync(function(){
+          if(scope.scale.max > 1 && scale > 0){
+            scope.scale.current = (scale - 1) / (scope.scale.max - 1)/100 * 10000;
+          } else {
+            scope.scale.current = 0;
+          }
+        });
+
+        var scaledWidth = scale * canvas.width;
+        var scaledHeight = scale * canvas.height;
         var oldWidth = s * canvas.width;
         var oldHeight = s * canvas.height;
 
-        var dWidth = newWidth - oldWidth;
-        var dHeight = newHeight - oldHeight;
+        var dWidth = scaledWidth - oldWidth;
+        var dHeight = scaledWidth - oldHeight;
 
         x -= dWidth / 2;
         y -= dHeight / 2;
 
-        if (x < 0) {
-          x = 0;
+        console.log('dWidth',dWidth);
+        console.log('dHeight',dHeight);
+
+        var differenceWidth = img.width - scaledWidth;
+        console.log('differenceWidth',differenceWidth);
+
+        if(differenceWidth > 0){
+          if(x > differenceWidth){
+            x = differenceWidth;
+          } else if (x < 0){
+            x = 0;
+          }
         } else {
-          if (x + newWidth > img.width) {
-            x = img.width - newWidth;
+          if(x > 0){
+            x = 0;
+          } else if (x < differenceWidth){
+            x = differenceWidth;
           }
         }
 
-        if (y < 0) {
-          y = 0;
+        var differenceHeight = img.height - scaledHeight;
+
+        if(differenceHeight > 0){
+          if(y > differenceHeight){
+            y = differenceHeight;
+          } else if (y < 0){
+            y = 0;
+          }
         } else {
-          if (y + newHeight > img.height) {
-            y = img.height - newHeight;
+          if(y > 0){
+            y = 0;
+          } else if (y < differenceHeight){
+            y = differenceHeight;
           }
         }
       };
@@ -86,10 +131,14 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
             scale = 1;
 
             if (img.width > img.height) {
-              maxScale = img.height / canvas.height;
+              scope.scale.max = img.height / canvas.height;
             } else {
-              maxScale = img.width / canvas.width;
+              scope.scale.max = img.width / canvas.width;
             }
+
+            scope.$evalAsync(function(){
+              scope.scale.current = 0;
+            });
 
             draw();
           };
@@ -103,23 +152,42 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         x += (sx - newX) * scale;
         y += (sy - newY) * scale;
 
-        if (x < 0) {
-          x = 0;
-        } else {
-          var scaledWidth = canvas.width * scale;
+        console.log('scale', scale);
+        console.log('x',x);
+        console.log('y',y);
 
-          if (x + scaledWidth > img.width) {
-            x = img.width - scaledWidth;
+        var scaledWidth = canvas.width * scale;
+        var differenceWidth = img.width - scaledWidth;
+        console.log('differenceWidth',differenceWidth);
+
+        if(differenceWidth > 0){
+          if(x > differenceWidth){
+            x = differenceWidth;
+          } else if (x < 0){
+            x = 0;
+          }
+        } else {
+          if(x > 0){
+            x = 0;
+          } else if (x < differenceWidth){
+            x = differenceWidth;
           }
         }
 
-        if (y < 0) {
-          y = 0;
-        } else {
-          var scaledHeight = canvas.height * scale;
+        var scaledHeight = canvas.height * scale;
+        differenceHeight = img.height - scaledHeight;
 
-          if (y + scaledHeight > img.height) {
-            y = img.height - scaledHeight;
+        if(differenceHeight > 0){
+          if(y > differenceHeight){
+            y = differenceHeight;
+          } else if (y < 0){
+            y = 0;
+          }
+        } else {
+          if(y > 0){
+            y = 0;
+          } else if (y < differenceHeight){
+            y = differenceHeight;
           }
         }
 
@@ -185,8 +253,8 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         }
       };
 
-      el.on('mousedown', mousedown);
-      el.on('touchstart', touchstart);
+      angular.element(canvas).on('mousedown', mousedown);
+      angular.element(canvas).on('touchstart', touchstart);
 
       var end = function end() {
         $document.off('mousemove', mousemove);
@@ -197,19 +265,19 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
       $document.on('mouseup touchend', end);
 
-      el.on('wheel', function(e) {
+      angular.element(canvas).on('wheel', function (e) {
         e.preventDefault();
 
         e = e.originalEvent || e;
 
-        if (!img.src) {
+        if (!img.src || scope.scale.max <= 1) {
           return;
         }
 
         if (e.deltaY < 0) {
-          zoom(-.15);
+          zoom(-.05);
         } else {
-          zoom(.15);
+          zoom(.05);
         }
 
         draw();

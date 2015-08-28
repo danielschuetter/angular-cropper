@@ -10,7 +10,7 @@
       <input type="file" accept="image/*" simple-change="file = $event.target.files[0]">
     </div>
 
-    <canvas width="400" height="400" tw-cropper="cropper" source="file"></canvas>
+    <div width="200" height="300" tw-cropper="cropper" source="file"></div>
 
     <button ng-click="crop = cropper.toDataURL()">Crop</button>
 
