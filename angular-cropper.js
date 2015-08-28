@@ -61,13 +61,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
           scale = scope.scale.max;
         }
 
-        scope.$evalAsync(function(){
-          if(scope.scale.max > 1 && scale > 0){
-            scope.scale.current = (scale - 1) / (scope.scale.max - 1)/100 * 10000;
-          } else {
-            scope.scale.current = 0;
-          }
-        });
+        setCurrentScale(scale);
 
         var scaledWidth = scale * canvas.width;
         var scaledHeight = scale * canvas.height;
@@ -117,35 +111,67 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         }
       };
 
+      function setCurrentScale(scale){
+        scope.$evalAsync(function(){
+          if(scope.scale.max > 1 && scale > 0){
+            scope.scale.current = (scale - 1) / (scope.scale.max - 1)/100 * 10000;
+          } else {
+            scope.scale.current = 0;
+          }
+        });
+      }
+
       scope.$watch(attrs.source, function(newVal) {
         if (!newVal) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
-
           return;
         }
 
         twFileReader.readAsDataURL(newVal).then(function(dataURL) {
           img.onload = function() {
-            x = 0;
-            y = 0;
-            scale = 1;
 
             if (img.width > img.height) {
-              scope.scale.max = img.height / canvas.height;
+              scale = scope.scale.max = img.height / canvas.height;
+              var widthScale = img.width / canvas.width;
+              if(widthScale > 1 && widthScale < scope.scale.max){
+                scale = widthScale;
+              }
             } else {
-              scope.scale.max = img.width / canvas.width;
+              scale = scope.scale.max = img.width / canvas.width;
+              var heightScale = img.height / canvas.height;
+              if(heightScale > 1 && heightScale < scope.scale.max){
+                scale = heightScale;
+              }
             }
 
-            scope.$evalAsync(function(){
-              scope.scale.current = 0;
-            });
+            if(scope.scale.max < 1){
+              scale = 1;
+              scope.scale.max = 1;
+            }
 
+            console.log('x',x);
+            console.log('y',y);
+            console.log('scale',scale);
+
+            setCurrentScale(scale);
+            centerImage();
             draw();
           };
 
           img.src = dataURL;
         });
       });
+
+      function centerImage(){
+        var heightDifference = img.height / scale - canvas.height;
+        var widthDifference = img.width / scale - canvas.width;
+        console.log('heightDifference',heightDifference);
+        console.log('widthDifference',widthDifference);
+
+        y = heightDifference/2;
+        x = widthDifference/2;
+
+      }
 
       var sx, sy;
       var move = function move(newX, newY) {
