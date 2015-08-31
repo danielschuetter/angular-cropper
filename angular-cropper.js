@@ -68,13 +68,13 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
         setCurrentScale(scope.scale.value);
 
-        var scaledWidth = scope.scale.value* canvas.width;
-        var scaledHeight = scope.scale.value* canvas.height;
+        var scaledWidth = scope.scale.value * canvas.width;
+        var scaledHeight = scope.scale.value * canvas.height;
         var oldWidth = s * canvas.width;
         var oldHeight = s * canvas.height;
 
         var dWidth = scaledWidth - oldWidth;
-        var dHeight = scaledWidth - oldHeight;
+        var dHeight = scaledHeight - oldHeight;
 
         scope.bounds.x -= dWidth / 2;
         scope.bounds.y -= dHeight / 2;
