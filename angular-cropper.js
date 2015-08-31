@@ -49,7 +49,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
       scope.onZoom = function(){
         if(scope.scale.max > 1){
-          scope.scale.value= (scope.scale.max - 1)/100 * scope.scale.percentage + 1;
+          scope.scale.value= (scope.scale.max - 1)/100 * (100 - scope.scale.percentage) + 1;
         }
         zoom(0);
         draw();
@@ -87,11 +87,14 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       function setCurrentScale(scale){
         scope.$evalAsync(function(){
           if(scope.scale.max > 1 && scale > 0){
-            scope.scale.percentage = (scale - 1) / (scope.scale.max - 1)/100 * 10000;
+            scope.scale.percentage = 100 - ((scale - 1) / (scope.scale.max - 1)/100 * 10000);
           } else {
-            scope.scale.percentage = 0;
+            scope.scale.percentage = 100;
           }
         });
+
+
+          console.log('scale percentage',scope.scale.percentage);
       }
 
       scope.$watch(attrs.source, function(newVal) {
