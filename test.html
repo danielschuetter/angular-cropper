@@ -3,6 +3,41 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+
+      * {
+        box-sizing: border-box;
+      }
+
+      [tw-cropper] {
+        display: inline-block;
+      }
+
+      [tw-cropper] canvas{
+        background: #efefef;
+
+      }
+      [tw-cropper].filled canvas{
+        cursor: move;
+      }
+
+      .cropper-wrapper {
+        position: relative;
+      }
+
+      .cropper-input-wrapper {
+        background: rgba(255,255,255,0.8);
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+      }
+
+      .cropper-input-wrapper input {
+        width: 80%;
+        margin-left: 10%;
+      }
+    </style>
   </head>
 
   <body ng-controller="MainController as main">
@@ -10,7 +45,7 @@
       <input type="file" accept="image/*" simple-change="file = $event.target.files[0]">
     </div>
 
-    <div width="200" height="300" tw-cropper="cropper" source="file"></div>
+    <div width="200" height="200" tw-cropper="cropper" source="file"></div>
 
     <button ng-click="crop = cropper.toDataURL()">Crop</button>
 

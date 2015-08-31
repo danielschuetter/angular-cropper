@@ -6,7 +6,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
   return {
     restrict: 'A',
-    template: '<div class="cropper-wrapper"><canvas width="{{bounds.width}}" height="{{bounds.height}}"></canvas><input type="range" min="0" max="100" step="1" ng-model="scale.percentage" ng-change="onZoom()" ng-if="scale.max > 1"/> {{scale.percentage}}</div>',
+    template: '<div class="cropper-wrapper"><canvas width="{{bounds.width}}" height="{{bounds.height}}"></canvas><div class="cropper-input-wrapper"><input type="range" min="0" max="100" step="1" ng-model="scale.percentage" ng-change="onZoom()" ng-if="scale.max > 1"/></div></div>',
     controller: ['$scope', '$attrs', '$element', function ($scope, $attrs, $element) {
       var canvas = $element[0].querySelector('canvas');
 
@@ -26,6 +26,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       var ctx = canvas.getContext('2d');
       var img = new Image();
       var sx, sy;
+      var filledClassName = 'filled';
 
       scope.bounds = {
         x: 0,
@@ -95,12 +96,15 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
       scope.$watch(attrs.source, function(newVal) {
         if (!newVal) {
+          el[0].classList.remove(filledClassName);
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           return;
         }
 
         twFileReader.readAsDataURL(newVal).then(function(dataURL) {
           img.onload = function() {
+
+            el[0].classList.add(filledClassName);
 
             if (img.width > img.height) {
               scope.scale.value = scope.scale.max = img.height / canvas.height;
