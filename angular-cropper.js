@@ -6,7 +6,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
   return {
     restrict: 'A',
-    template: '<div class="cropper-wrapper"><canvas width="{{bounds.width}}" height="{{bounds.height}}"></canvas><div class="cropper-input-wrapper"><input type="range" min="0" max="100" step="1" ng-model="scale.percentage" ng-change="onZoom()" ng-if="scale.max > 1"/></div></div>',
+    template: '<div class="cropper-wrapper"><canvas width="{{::bounds.width}}" height="{{::bounds.height}}"></canvas><div class="cropper-input-wrapper"><input type="range" min="0" max="100" step="1" ng-model="scale.percentage" ng-change="onZoom()" ng-if="scale.max > 1"/></div></div>',
     controller: ['$scope', '$attrs', '$element', function ($scope, $attrs, $element) {
       var canvas = $element[0].querySelector('canvas');
 
@@ -133,7 +133,8 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
             console.log('scale',scope.scale.value);
 
             setCurrentScale(scope.scale.value);
-            centerImage();
+            centerImage('x');
+            centerImage('y');
             draw();
           };
 
@@ -141,18 +142,19 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         });
       });
 
-      function centerImage(){
-        var heightDifference = img.height / scope.scale.value- canvas.height;
-        var widthDifference = img.width / scope.scale.value- canvas.width;
-        console.log('heightDifference',heightDifference);
-        console.log('widthDifference',widthDifference);
+      function centerImage(coord){
+        var property = coord === 'x' ? 'width' : 'height';
+        var difference = img[property] / scope.scale.value -  canvas[property];
 
-        scope.bounds.y = heightDifference/2;
-        scope.bounds.x = widthDifference/2;
+          console.log(property + 'Difference',difference);
+        console.log('scale value',scope.scale.value);
+        scope.bounds[coord] = difference/2;
 
-          sx = scope.bounds.x;
-            sy = scope.bounds.y;
-
+        if(coord === 'x') {
+          sx = scope.bounds[coord];
+        } else {
+          sy = scope.bounds[coord];
+        }
       }
 
       var sx, sy;
