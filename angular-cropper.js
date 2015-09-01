@@ -28,29 +28,30 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       var sx, sy;
       var filledClassName = 'filled';
 
+      var buffer = parseInt(attrs.buffer || 0, 10);
+
       scope.bounds = {
         x: 0,
         y: 0,
-        width: parseInt(attrs.width || 0) + parseInt(attrs.transparent || 0),
-        height: parseInt(attrs.height || 0) + parseInt(attrs.transparent || 0),
-        scale: 1
+        offsetX: 0,
+        offsetY: 0,
+        width: parseInt(attrs.width || 0) + buffer,
+        height: parseInt(attrs.height || 0) + buffer
       };
 
       scope.scale= {
-        current: 0,
+        value: 0,
         percentage: 0,
         max: 0
       };
 
       var draw = function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, scope.bounds.x, scope.bounds.y, canvas.width * scope.scale.value, canvas.height * scope.scale.value, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, scope.bounds.x + scope.bounds.offsetX, scope.bounds.y + scope.bounds.offsetY, canvas.width * scope.scale.value, canvas.height * scope.scale.value, scope.bounds.offsetX, scope.bounds.offsetY, canvas.width, canvas.height);
       };
 
       scope.onZoom = function(){
-        if(scope.scale.max > 1){
-          scope.scale.value= (scope.scale.max - 1)/100 * (100 - scope.scale.percentage) + 1;
-        }
+          scope.scale.value = (scope.scale.max - 1)/100 * (100 - scope.scale.percentage) + 1;
         zoom(0);
         draw();
       };
@@ -60,10 +61,10 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
         scope.scale.value+= dScale;
 
-        if (scope.scale.value< 1) {
-          scope.scale.value= 1;
-        } else if (scope.scale.value> scope.scale.max) {
-          scope.scale.value= scope.scale.max;
+        if (scope.scale.value < 1) {
+          scope.scale.value = 1;
+        } else if (scope.scale.value > scope.scale.max) {
+          scope.scale.value = scope.scale.max;
         }
 
         setCurrentScale(scope.scale.value);
@@ -92,9 +93,6 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
             scope.scale.percentage = 100;
           }
         });
-
-
-          console.log('scale percentage',scope.scale.percentage);
       }
 
       scope.$watch(attrs.source, function(newVal) {
@@ -110,21 +108,21 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
             el[0].classList.add(filledClassName);
 
             if (img.width > img.height) {
-              scope.scale.value = scope.scale.max = img.height / canvas.height;
-              var widthScale = img.width / canvas.width;
+              scope.scale.value = scope.scale.max = img.height / (canvas.height - 2 * buffer);
+              var widthScale = img.width / (canvas.width - 2 * buffer);
               if(widthScale > 1 && widthScale < scope.scale.max){
                 scope.scale.value = widthScale;
               }
             } else {
-              scope.scale.value = scope.scale.max = img.width / canvas.width;
-              var heightScale = img.height / canvas.height;
+              scope.scale.value = scope.scale.max = img.width / (canvas.width - 2 * buffer);
+              var heightScale = img.height / (canvas.height - 2 * buffer);
               if(heightScale > 1 && heightScale < scope.scale.max){
                 scope.scale.value= heightScale;
               }
             }
 
             if(scope.scale.max < 1){
-              scope.scale.value= 1;
+              scope.scale.value = 1;
               scope.scale.max = 1;
             }
 
@@ -144,7 +142,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
       function centerImage(coord){
         var property = coord === 'x' ? 'width' : 'height';
-        var difference = img[property] / scope.scale.value -  canvas[property];
+        var difference = img[property] / scope.scale.value -  canvas[property] - buffer;
 
           console.log(property + 'Difference',difference);
         console.log('scale value',scope.scale.value);
@@ -181,16 +179,32 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         var difference = img[property] - scaledDimension;
 
         if(difference > 0){
-          if(scope.bounds[coord] > difference){
-            scope.bounds[coord] = difference;
-          } else if (scope.bounds[coord] < 0){
-            scope.bounds[coord] = 0;
+          if(scope.bounds[coord] > difference + buffer){
+            scope.bounds[coord] = difference + buffer;
+          } else if (scope.bounds[coord] < -buffer){
+            scope.bounds[coord] = -buffer;
+          }
+
+          if(scope.bounds[coord] < 0){
+            scope.bounds['offset' + coord.toUpperCase()] = -scope.bounds[coord];
+          } else if (scope.bounds[coord] > difference){
+            scope.bounds['offset' + coord.toUpperCase()] = -(scope.bounds[coord] - difference);
+          } else {
+            scope.bounds['offset' + coord.toUpperCase()] = 0;
           }
         } else {
           if(scope.bounds[coord] > 0){
             scope.bounds[coord] = 0;
           } else if (scope.bounds[coord] < difference){
             scope.bounds[coord] = difference;
+          }
+
+          if(scope.bounds[coord] > 0){
+            scope.bounds['offset' + coord.toUpperCase()] = -scope.bounds[coord];
+          } else if (scope.bounds[coord] < difference){
+            scope.bounds['offset' + coord.toUpperCase()] = -(scope.bounds[coord] - difference);
+          } else {
+            scope.bounds['offset' + coord.toUpperCase()] = 0;
           }
         }
       }
