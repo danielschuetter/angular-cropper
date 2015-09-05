@@ -51,8 +51,8 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       };
 
       scope.onZoom = function(){
-          scope.scale.value = (scope.scale.max - 1)/100 * (100 - scope.scale.percentage) + 1;
-        zoom(0);
+        var difference = (scope.scale.max - 1)/100 * (100 - scope.scale.percentage) + 1 - scope.scale.value;
+        zoom(difference);
         draw();
       };
 
