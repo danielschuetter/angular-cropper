@@ -80,8 +80,8 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         scope.bounds.x -= dWidth / 2;
         scope.bounds.y -= dHeight / 2;
 
-          repositionsWithinBounds('x');
-          repositionsWithinBounds('y');
+        repositionsWithinBounds('x');
+        repositionsWithinBounds('y');
 
       };
 
@@ -142,11 +142,12 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
       function centerImage(coord){
         var property = coord === 'x' ? 'width' : 'height';
-        var difference = img[property] / scope.scale.value -  canvas[property] - buffer;
+        var difference = img[property] / scope.scale.value - canvas[property];
 
-          console.log(property + 'Difference',difference);
+        console.log(property + 'Difference',difference);
         console.log('scale value',scope.scale.value);
-        scope.bounds[coord] = difference/2;
+        scope.bounds[coord] = difference * scope.scale.value / 2;
+        console.log(coord, scope.bounds[coord]);
 
         if(coord === 'x') {
           sx = scope.bounds[coord];
@@ -164,8 +165,8 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         console.log('scope.bounds.x',scope.bounds.x);
         console.log('scope.bounds.y',scope.bounds.y);
 
-          repositionsWithinBounds('x');
-       repositionsWithinBounds('y');
+        repositionsWithinBounds('x');
+        repositionsWithinBounds('y');
 
         draw();
 
@@ -174,7 +175,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       };
 
       function repositionsWithinBounds(coord){
-          var property = coord === 'x' ? 'width' : 'height';
+        var property = coord === 'x' ? 'width' : 'height';
         var scaledDimension = canvas[property] * scope.scale.value;
         var difference = img[property] - scaledDimension;
 
