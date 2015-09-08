@@ -9,6 +9,15 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
     template: '<div class="cropper-wrapper"><canvas width="{{::bounds.width}}" height="{{::bounds.height}}"></canvas><div class="cropper-input-wrapper"><input type="range" min="0" max="100" step="1" ng-model="scale.percentage" ng-change="onZoom()" ng-if="scale.max > 1"/></div></div>',
     controller: ['$scope', '$attrs', '$element', function ($scope, $attrs, $element) {
       var canvas = $element[0].querySelector('canvas');
+      var bufferCanvas = null;
+
+      var buffer = parseInt($attrs.buffer || 0);
+
+      if(buffer > 0){
+        bufferCanvas = document.createElement('canvas');
+        bufferCanvas.height = parseInt($attrs.height || 0);
+        bufferCanvas.width = parseInt($attrs.width || 0);
+      }
 
       // If twCropper attribute is provided
       if ($attrs.twCropper) {
@@ -17,7 +26,13 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       }
 
       this.toDataURL = function toDataURL() {
-        return canvas.toDataURL();
+        if(buffer > 0){
+          var imageData = canvas.getContext("2d").getImageData(buffer, buffer, bufferCanvas.width, bufferCanvas.height);
+          bufferCanvas.getContext("2d").putImageData(imageData, 0, 0);
+          return bufferCanvas.toDataURL();
+        } else {
+          return canvas.toDataURL();
+        }
       };
     }],
     link: function (scope, el, attrs) {
@@ -28,15 +43,16 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       var sx, sy;
       var filledClassName = 'filled';
 
-      var buffer = parseInt(attrs.buffer || 0, 10);
+      var buffer = parseInt(attrs.buffer || 0);
+      var bufferFillColor = attrs.bufferFillColor || 'rgba(242,242,242,0.7)';
 
       scope.bounds = {
         x: 0,
         y: 0,
         offsetX: 0,
         offsetY: 0,
-        width: parseInt(attrs.width || 0) + buffer,
-        height: parseInt(attrs.height || 0) + buffer
+        width: parseInt(attrs.width || 0) + buffer * 2,
+        height: parseInt(attrs.height || 0) + buffer * 2
       };
 
       scope.scale= {
@@ -48,6 +64,14 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       var draw = function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, scope.bounds.x + scope.bounds.offsetX, scope.bounds.y + scope.bounds.offsetY, canvas.width * scope.scale.value, canvas.height * scope.scale.value, scope.bounds.offsetX, scope.bounds.offsetY, canvas.width, canvas.height);
+        if(buffer){
+
+          ctx.fillStyle = bufferFillColor;
+          ctx.fillRect(0,0,buffer,canvas.height);
+          ctx.fillRect(canvas.width - buffer,0,buffer,canvas.height);
+          ctx.fillRect(buffer,0,canvas.width - 2 * buffer, buffer);
+          ctx.fillRect(buffer,canvas.height - buffer,canvas.width - 2 * buffer, buffer);
+        }
       };
 
       scope.onZoom = function(){
