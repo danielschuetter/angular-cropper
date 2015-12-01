@@ -7,7 +7,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
   return {
     restrict: 'A',
     templateUrl: function($element, $attrs) {
-      return attrs.templateUrl || 'template/cropper.html';
+      return $attrs.templateUrl || 'template/cropper.html';
     },
     controller: ['$scope', '$attrs', '$element', function ($scope, $attrs, $element) {
       var canvas = $element[0].querySelector('canvas');
