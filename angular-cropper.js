@@ -332,7 +332,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 }]);
 
 
-angular.module("twCropper", []).run(["$templateCache", function ($templateCache) {
+angular.module("tw.directives.cropper", []).run(["$templateCache", function ($templateCache) {
   $templateCache.put("template/cropper.html", '<div class="cropper-wrapper">' +
     '<canvas width="{{::bounds.width}}" height="{{::bounds.height}}"></canvas>' +
     '<div class="cropper-input-wrapper" ng-if="scale.max > 1">' +
