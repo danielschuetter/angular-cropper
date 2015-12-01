@@ -1,12 +1,12 @@
 angular.module('tw.directives.cropper', ['tw.services.fileReader']);
 
-angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$window', '$document', 'twFileReader', function($parse, $window, $document, twFileReader) {
+angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$window', '$document', 'twFileReader', function ($parse, $window, $document, twFileReader) {
   var document = $document[0],
-  Math = $window.Math;
+    Math = $window.Math;
 
   return {
     restrict: 'A',
-    templateUrl: function($element, $attrs) {
+    templateUrl: function ($element, $attrs) {
       return $attrs.templateUrl || 'template/cropper.html';
     },
     controller: ['$scope', '$attrs', '$element', function ($scope, $attrs, $element) {
@@ -15,7 +15,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
       var buffer = parseInt($attrs.buffer || 0);
 
-      if(buffer > 0){
+      if (buffer > 0) {
         bufferCanvas = document.createElement('canvas');
         bufferCanvas.height = parseInt($attrs.height || 0);
         bufferCanvas.width = parseInt($attrs.width || 0);
@@ -28,7 +28,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       }
 
       this.toDataURL = function toDataURL() {
-        if(buffer > 0){
+        if (buffer > 0) {
           var imageData = canvas.getContext("2d").getImageData(buffer, buffer, bufferCanvas.width, bufferCanvas.height);
           bufferCanvas.getContext("2d").putImageData(imageData, 0, 0);
           return bufferCanvas.toDataURL();
@@ -57,7 +57,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         height: parseInt(attrs.height || 0) + buffer * 2
       };
 
-      scope.scale= {
+      scope.scale = {
         value: 0,
         percentage: 0,
         max: 0
@@ -66,24 +66,24 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       var draw = function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, scope.bounds.x + scope.bounds.offsetX, scope.bounds.y + scope.bounds.offsetY, canvas.width * scope.scale.value, canvas.height * scope.scale.value, scope.bounds.offsetX, scope.bounds.offsetY, canvas.width, canvas.height);
-        if(buffer){
+        if (buffer) {
 
           ctx.fillStyle = bufferFillColor;
-          ctx.fillRect(0,0,buffer,canvas.height);
-          ctx.fillRect(canvas.width - buffer,0,buffer,canvas.height);
-          ctx.fillRect(buffer,0,canvas.width - 2 * buffer, buffer);
-          ctx.fillRect(buffer,canvas.height - buffer,canvas.width - 2 * buffer, buffer);
+          ctx.fillRect(0, 0, buffer, canvas.height);
+          ctx.fillRect(canvas.width - buffer, 0, buffer, canvas.height);
+          ctx.fillRect(buffer, 0, canvas.width - 2 * buffer, buffer);
+          ctx.fillRect(buffer, canvas.height - buffer, canvas.width - 2 * buffer, buffer);
         }
       };
 
-      scope.onZoom = function(){
-        var difference = (scope.scale.max - 1)/100 * (100 - scope.scale.percentage) + 1 - scope.scale.value;
+      scope.onZoom = function () {
+        var difference = (scope.scale.max - 1) / 100 * (100 - scope.scale.percentage) + 1 - scope.scale.value;
         zoom(difference);
         draw();
       };
 
 
-      scope.zoom = function zoomAndDraw(dScale){
+      scope.zoom = function zoomAndDraw(dScale) {
         zoom(dScale);
         draw();
       };
@@ -91,7 +91,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       function zoom(dScale) {
         var s = scope.scale.value;
 
-        scope.scale.value+= dScale;
+        scope.scale.value += dScale;
 
         if (scope.scale.value < 1) {
           scope.scale.value = 1;
@@ -117,50 +117,50 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
       };
 
-      function setCurrentScale(scale){
-        scope.$evalAsync(function(){
-          if(scope.scale.max > 1 && scale > 0){
-            scope.scale.percentage = 100 - ((scale - 1) / (scope.scale.max - 1)/100 * 10000);
+      function setCurrentScale(scale) {
+        scope.$evalAsync(function () {
+          if (scope.scale.max > 1 && scale > 0) {
+            scope.scale.percentage = 100 - ((scale - 1) / (scope.scale.max - 1) / 100 * 10000);
           } else {
             scope.scale.percentage = 100;
           }
         });
       }
 
-      scope.$watch(attrs.source, function(newVal) {
+      scope.$watch(attrs.source, function (newVal) {
         if (!newVal) {
           el[0].classList.remove(filledClassName);
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           return;
         }
 
-        twFileReader.readAsDataURL(newVal).then(function(dataURL) {
-          img.onload = function() {
+        twFileReader.readAsDataURL(newVal).then(function (dataURL) {
+          img.onload = function () {
 
             el[0].classList.add(filledClassName);
 
             if (img.width > img.height) {
               scope.scale.value = scope.scale.max = img.height / (canvas.height - 2 * buffer);
               var widthScale = img.width / (canvas.width - 2 * buffer);
-              if(widthScale > 1 && widthScale < scope.scale.max){
+              if (widthScale > 1 && widthScale < scope.scale.max) {
                 scope.scale.value = widthScale;
               }
             } else {
               scope.scale.value = scope.scale.max = img.width / (canvas.width - 2 * buffer);
               var heightScale = img.height / (canvas.height - 2 * buffer);
-              if(heightScale > 1 && heightScale < scope.scale.max){
-                scope.scale.value= heightScale;
+              if (heightScale > 1 && heightScale < scope.scale.max) {
+                scope.scale.value = heightScale;
               }
             }
 
-            if(scope.scale.max < 1){
+            if (scope.scale.max < 1) {
               scope.scale.value = 1;
               scope.scale.max = 1;
             }
 
-            console.log('scope.bounds.x',scope.bounds.x);
-            console.log('scope.bounds.y',scope.bounds.y);
-            console.log('scale',scope.scale.value);
+            console.log('scope.bounds.x', scope.bounds.x);
+            console.log('scope.bounds.y', scope.bounds.y);
+            console.log('scale', scope.scale.value);
 
             setCurrentScale(scope.scale.value);
             centerImage('x');
@@ -172,16 +172,16 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         });
       });
 
-      function centerImage(coord){
+      function centerImage(coord) {
         var property = coord === 'x' ? 'width' : 'height';
         var difference = img[property] / scope.scale.value - canvas[property];
 
-        console.log(property + 'Difference',difference);
-        console.log('scale value',scope.scale.value);
+        console.log(property + 'Difference', difference);
+        console.log('scale value', scope.scale.value);
         scope.bounds[coord] = difference * scope.scale.value / 2;
         console.log(coord, scope.bounds[coord]);
 
-        if(coord === 'x') {
+        if (coord === 'x') {
           sx = scope.bounds[coord];
         } else {
           sy = scope.bounds[coord];
@@ -194,8 +194,8 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         scope.bounds.y += (sy - newY) * scope.scale.value;
 
         console.log('scale', scope.scale.value);
-        console.log('scope.bounds.x',scope.bounds.x);
-        console.log('scope.bounds.y',scope.bounds.y);
+        console.log('scope.bounds.x', scope.bounds.x);
+        console.log('scope.bounds.y', scope.bounds.y);
 
         repositionsWithinBounds('x');
         repositionsWithinBounds('y');
@@ -206,35 +206,35 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         sy = newY;
       };
 
-      function repositionsWithinBounds(coord){
+      function repositionsWithinBounds(coord) {
         var property = coord === 'x' ? 'width' : 'height';
         var scaledDimension = canvas[property] * scope.scale.value;
         var difference = img[property] - scaledDimension;
 
-        if(difference > 0){
-          if(scope.bounds[coord] > difference + buffer){
+        if (difference > 0) {
+          if (scope.bounds[coord] > difference + buffer) {
             scope.bounds[coord] = difference + buffer;
-          } else if (scope.bounds[coord] < -buffer){
+          } else if (scope.bounds[coord] < -buffer) {
             scope.bounds[coord] = -buffer;
           }
 
-          if(scope.bounds[coord] < 0){
+          if (scope.bounds[coord] < 0) {
             scope.bounds['offset' + coord.toUpperCase()] = -scope.bounds[coord];
-          } else if (scope.bounds[coord] > difference){
+          } else if (scope.bounds[coord] > difference) {
             scope.bounds['offset' + coord.toUpperCase()] = -(scope.bounds[coord] - difference);
           } else {
             scope.bounds['offset' + coord.toUpperCase()] = 0;
           }
         } else {
-          if(scope.bounds[coord] > 0){
+          if (scope.bounds[coord] > 0) {
             scope.bounds[coord] = 0;
-          } else if (scope.bounds[coord] < difference){
+          } else if (scope.bounds[coord] < difference) {
             scope.bounds[coord] = difference;
           }
 
-          if(scope.bounds[coord] > 0){
+          if (scope.bounds[coord] > 0) {
             scope.bounds['offset' + coord.toUpperCase()] = -scope.bounds[coord];
-          } else if (scope.bounds[coord] < difference){
+          } else if (scope.bounds[coord] < difference) {
             scope.bounds['offset' + coord.toUpperCase()] = -(scope.bounds[coord] - difference);
           } else {
             scope.bounds['offset' + coord.toUpperCase()] = 0;
@@ -253,7 +253,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         var x2 = touch2.clientX;
         var y2 = touch2.clientY;
 
-        var newD = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+        var newD = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
 
         if (d !== null) {
           var dx = newD - d;
@@ -274,7 +274,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         }
       };
 
-      var start = function(x, y) {
+      var start = function (x, y) {
         if (!img.src) {
           return;
         }
@@ -329,4 +329,14 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       });
     }
   };
+}]);
+
+
+angular.module("twCropper", []).run(["$templateCache", function ($templateCache) {
+  $templateCache.put("template/cropper.html", '<div class="cropper-wrapper">' +
+    '<canvas width="{{::bounds.width}}" height="{{::bounds.height}}"></canvas>' +
+    '<div class="cropper-input-wrapper" ng-if="scale.max > 1">' +
+    '<button type="button" class="cropper-zoom-out" ng-click="zoom(.1)">-</button><input type="range" min="0" max="100" step="1" ng-model="scale.percentage" ng-change="onZoom()"/><button type="button" class="cropper-zoom-in" ng-click="zoom(-.1)">+</button>' +
+    '</div>' +
+    '</div>');
 }]);
