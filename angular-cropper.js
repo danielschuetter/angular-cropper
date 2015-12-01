@@ -6,7 +6,9 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
   return {
     restrict: 'A',
-    template: '<div class="cropper-wrapper"><canvas width="{{::bounds.width}}" height="{{::bounds.height}}"></canvas><div class="cropper-input-wrapper"><input type="range" min="0" max="100" step="1" ng-model="scale.percentage" ng-change="onZoom()" ng-if="scale.max > 1"/></div></div>',
+    templateUrl: function($element, $attrs) {
+      return attrs.templateUrl || 'template/cropper.html';
+    },
     controller: ['$scope', '$attrs', '$element', function ($scope, $attrs, $element) {
       var canvas = $element[0].querySelector('canvas');
       var bufferCanvas = null;
@@ -80,7 +82,13 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         draw();
       };
 
-      var zoom = function zoom(dScale) {
+
+      scope.zoom = function zoomAndDraw(dScale){
+        zoom(dScale);
+        draw();
+      };
+
+      function zoom(dScale) {
         var s = scope.scale.value;
 
         scope.scale.value+= dScale;

@@ -10,6 +10,7 @@
       }
 
       [tw-cropper] {
+        font-size: 0;
         display: inline-block;
       }
 
@@ -23,19 +24,38 @@
 
       .cropper-wrapper {
         position: relative;
+        vertical-align: middle;
       }
 
       .cropper-input-wrapper {
-        background: rgba(255,255,255,0.8);
         position: absolute;
         bottom: 0;
         left: 0;
         width: 100%;
+        white-space: nowrap;
+        vertical-align: middle;
+      }
+
+      .cropper-zoom-in,
+      .cropper-zoom-out{
+        width: 10%;
+        display: inline-block;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 1;
+        background: none;
+        border: none;
+        box-shadow: none;
+        height: 100%;
+        font-size: 16px;
       }
 
       .cropper-input-wrapper input {
         width: 80%;
-        margin-left: 10%;
+        display: inline-block;
+        height: 100%;
+        vertical-align: middle;
+        margin: 0;
       }
     </style>
   </head>
@@ -45,7 +65,8 @@
       <input type="file" accept="image/*" simple-change="file = $event.target.files[0]">
     </div>
 
-    <div width="300" height="300" tw-cropper="cropper" source="file" buffer="50"></div>
+    <div width="300" height="300" tw-cropper="cropper" source="file" buffer="20"></div>
+
 
     <button ng-click="crop = cropper.toDataURL()">Crop</button>
 
