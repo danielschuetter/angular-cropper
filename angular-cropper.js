@@ -1,8 +1,22 @@
 angular.module('tw.directives.cropper', ['tw.services.fileReader']);
 
-angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$window', '$document', 'twFileReader', function ($parse, $window, $document, twFileReader) {
+angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$window', '$document', 'twFileReader', '$timeout', function ($parse, $window, $document, twFileReader, $timeout) {
   var document = $document[0],
     Math = $window.Math;
+
+  function toDataUrl(canvas, buffer) {
+    if (buffer > 0) {
+      var bufferCanvas = document.createElement('canvas');
+      bufferCanvas.height = canvas.clientHeight - 2 * buffer;
+      bufferCanvas.width = canvas.clientWidth - 2 * buffer;
+      var imageData = canvas.getContext("2d").getImageData(buffer, buffer, bufferCanvas.width, bufferCanvas.height);
+      bufferCanvas.getContext("2d").putImageData(imageData, 0, 0);
+      return bufferCanvas.toDataURL();
+    } else {
+      return canvas.toDataURL();
+    }
+  }
+
 
   return {
     restrict: 'A',
@@ -11,31 +25,14 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
     },
     controller: ['$scope', '$attrs', '$element', function ($scope, $attrs, $element) {
       var canvas = $element[0].querySelector('canvas');
-      var bufferCanvas = null;
-
       var buffer = parseInt($attrs.buffer || 0);
-
-      if (buffer > 0) {
-        bufferCanvas = document.createElement('canvas');
-        bufferCanvas.height = parseInt($attrs.height || 0);
-        bufferCanvas.width = parseInt($attrs.width || 0);
-      }
-
       // If twCropper attribute is provided
       if ($attrs.twCropper) {
         // Publish this controller to the scope via the expression
         $parse($attrs.twCropper).assign($scope, this);
       }
 
-      this.toDataURL = function toDataURL() {
-        if (buffer > 0) {
-          var imageData = canvas.getContext("2d").getImageData(buffer, buffer, bufferCanvas.width, bufferCanvas.height);
-          bufferCanvas.getContext("2d").putImageData(imageData, 0, 0);
-          return bufferCanvas.toDataURL();
-        } else {
-          return canvas.toDataURL();
-        }
-      };
+      this.toDataURL = toDataUrl.bind(null, canvas, buffer);
     }],
     link: function (scope, el, attrs) {
 
@@ -47,6 +44,11 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
       var buffer = parseInt(attrs.buffer || 0);
       var bufferFillColor = attrs.bufferFillColor || 'rgba(242,242,242,0.7)';
+
+      var debounce = parseInt(attrs.debounce || 0);
+      var debounceTimeout = null;
+
+      var targetSetter = angular.isDefined(attrs.target) ? $parse(attrs.target).assign : null;
 
       scope.bounds = {
         x: 0,
@@ -67,14 +69,27 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, scope.bounds.x + scope.bounds.offsetX, scope.bounds.y + scope.bounds.offsetY, canvas.width * scope.scale.value, canvas.height * scope.scale.value, scope.bounds.offsetX, scope.bounds.offsetY, canvas.width, canvas.height);
         if (buffer) {
-
           ctx.fillStyle = bufferFillColor;
           ctx.fillRect(0, 0, buffer, canvas.height);
           ctx.fillRect(canvas.width - buffer, 0, buffer, canvas.height);
           ctx.fillRect(buffer, 0, canvas.width - 2 * buffer, buffer);
           ctx.fillRect(buffer, canvas.height - buffer, canvas.width - 2 * buffer, buffer);
         }
+
+        if (targetSetter) {
+          debouncedSave();
+        }
       };
+
+      function debouncedSave() {
+        if (debounceTimeout) {
+          $timeout.cancel(debounceTimeout);
+        }
+        debounceTimeout = $timeout(function () {
+          console.log("save");
+          targetSetter(scope, toDataUrl(canvas, buffer));
+        }, debounce);
+      }
 
       scope.onZoom = function () {
         var difference = (scope.scale.max - 1) / 100 * (100 - scope.scale.percentage) + 1 - scope.scale.value;
@@ -135,10 +150,11 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
         }
 
         twFileReader.readAsDataURL(newVal).then(function (dataURL) {
-          img.onload = function () {
-
+          if (dataURL) {
             el[0].classList.add(filledClassName);
+          }
 
+          img.onload = function () {
             if (img.width > img.height) {
               scope.scale.value = scope.scale.max = img.height / (canvas.height - 2 * buffer);
               var widthScale = img.width / (canvas.width - 2 * buffer);
