@@ -49,7 +49,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       var debounceTimeout = null;
 
       var targetSetter = angular.isDefined(attrs.target) ? $parse(attrs.target).assign : null;
-      var srcSetter = angular.isDefined(attrs.src) ? $parse(attrs.src).assign : null;
+      var srcSetter = angular.isDefined(attrs.source) ? $parse(attrs.source).assign : null;
 
       scope.bounds = {
         x: 0,
