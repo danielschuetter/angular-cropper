@@ -49,6 +49,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       var debounceTimeout = null;
 
       var targetSetter = angular.isDefined(attrs.target) ? $parse(attrs.target).assign : null;
+      var srcSetter = angular.isDefined(attrs.src) ? $parse(attrs.src).assign : null;
 
       scope.bounds = {
         x: 0,
@@ -66,6 +67,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       };
 
       var draw = function draw() {
+        console.log(scope.bounds.x + scope.bounds.offsetX, scope.bounds.y + scope.bounds.offsetY, canvas.width * scope.scale.value, canvas.height * scope.scale.value, scope.bounds.offsetX, scope.bounds.offsetY, canvas.width, canvas.height);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, scope.bounds.x + scope.bounds.offsetX, scope.bounds.y + scope.bounds.offsetY, canvas.width * scope.scale.value, canvas.height * scope.scale.value, scope.bounds.offsetX, scope.bounds.offsetY, canvas.width, canvas.height);
         if (buffer) {
@@ -90,6 +92,10 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
           targetSetter(scope, toDataUrl(canvas, buffer));
         }, debounce);
       }
+
+      scope.updateSrcFile = function (file) {
+        srcSetter(scope, file);
+      };
 
       scope.onZoom = function () {
         var difference = (scope.scale.max - 1) / 100 * (100 - scope.scale.percentage) + 1 - scope.scale.value;
@@ -129,7 +135,6 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
 
         repositionsWithinBounds('x');
         repositionsWithinBounds('y');
-
       };
 
       function setCurrentScale(scale) {
