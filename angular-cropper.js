@@ -17,12 +17,12 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
     }
   }
 
-
   return {
     restrict: 'A',
     templateUrl: function ($element, $attrs) {
       return $attrs.templateUrl || 'template/cropper.html';
     },
+    scope: true,
     controller: ['$scope', '$attrs', '$element', function ($scope, $attrs, $element) {
       var canvas = $element[0].querySelector('canvas');
       var buffer = parseInt($attrs.buffer || 0);
@@ -51,14 +51,24 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       var targetSetter = angular.isDefined(attrs.target) ? $parse(attrs.target).assign : null;
       var srcSetter = angular.isDefined(attrs.source) ? $parse(attrs.source).assign : null;
 
-      scope.bounds = {
-        x: 0,
-        y: 0,
-        offsetX: 0,
-        offsetY: 0,
-        width: parseInt(attrs.width || 0) + buffer * 2,
-        height: parseInt(attrs.height || 0) + buffer * 2
-      };
+      if (attrs.bounds) {
+        scope.bounds = $parse(attrs.bounds)(scope);
+      }
+
+      if (!scope.bounds) {
+        scope.bounds = {
+          x: 0,
+          y: 0,
+          offsetX: 0,
+          offsetY: 0,
+          width: parseInt(attrs.width || 0) + buffer * 2,
+          height: parseInt(attrs.height || 0) + buffer * 2
+        };
+
+        if (attrs.bounds) {
+          $parse(attrs.bounds).assign(scope.$parent, scope.bounds);
+        }
+      }
 
       scope.scale = {
         value: 0,

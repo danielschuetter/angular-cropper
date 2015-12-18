@@ -1,8 +1,10 @@
 <div class="cropper-wrapper">
     <canvas width="{{::bounds.width}}" height="{{::bounds.height}}"></canvas>
     <div class="cropper-input-wrapper" ng-if="scale.max > 1">
-        <button type="button" class="cropper-zoom-out" ng-click="zoom(.1)">test</button>
+        <button type="button" class="cropper-zoom-out" ng-click="zoom(.1)"
+                ng-if="::bounds.width > 150">+</button>
         <input type="range" min="0" max="100" step="1" ng-model="scale.percentage" ng-change="onZoom()"/>
-        <button type="button" class="cropper-zoom-in" ng-click="zoom(-.1)">bla</button>
+        <button type="button" class="cropper-zoom-in" ng-click="zoom(-.1)"
+                ng-if="::bounds.width > 150">-</button>
     </div>
 </div>
