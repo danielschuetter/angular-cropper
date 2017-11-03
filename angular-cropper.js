@@ -42,7 +42,7 @@ angular.module('tw.directives.cropper').directive('twCropper', ['$parse', '$wind
       var sx, sy;
       var filledClassName = 'filled';
 
-      var buffer = parseInt(attrs.buffer || 0);
+      var buffer = scope.buffer = parseInt(attrs.buffer || 0);
       var bufferFillColor = attrs.bufferFillColor || 'rgba(242,242,242,0.7)';
 
       var debounce = parseInt(attrs.debounce || 0);
